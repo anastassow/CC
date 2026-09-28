@@ -14,9 +14,9 @@ typedef enum {
 } NodeType;
 
 typedef struct Node{
-    NodeType type;
-    long   value;
-    char     op;
+    NodeType     type;
+    long         value;
+    char         op;
     struct Node* left;
     struct Node* right;
 } Node;
@@ -25,7 +25,7 @@ Node* new_num(long value);
 Node* new_binop(char op, Node* left, Node* right);
 Node* new_neg(Node* operand);
 
-void    print_tree(const Node *n, FILE *out);
-void    free_tree(Node* n);
+void print_tree(const Node *n, FILE *out);
+void free_tree(Node* n);
 
 #endif //CC_AST_H
