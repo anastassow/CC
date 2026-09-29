@@ -2,11 +2,16 @@
 
 %{
 #include <stdio.h>
+#include "ir.h"
+#include "lower.h"
 
 int  yylex(void);
 void yyerror(const char *msg);
 extern FILE *yyin;
 extern int   yylineno;
+
+static IrProgram *prog;      /* the IR for the whole input file */
+static int        nerrors;   /* syntax errors seen */
 %}
 
 %union {
@@ -31,9 +36,9 @@ input : %empty
 
 line  : NEWLINE
       | expr NEWLINE      {
-                            printf("line %d:\n", yylineno - 1);
-                            print_tree($1, stdout);
-                            free_tree($1);
+                            Operand result = lower_expr(prog, $1);   /* AST → IR */
+                            ir_print_val(prog, result);              /* add a "print" instruction */
+                            free_tree($1);                           /* AST no longer needed */
                           }
       | error NEWLINE     { yyerrok; }
       ;
@@ -49,6 +54,7 @@ expr  : NUM                     { $$ = new_num($1); }
 %%
 
 void yyerror(const char *msg) {
+    nerrors++;
     fprintf(stderr, "line %d: %s\n", yylineno, msg);
 }
 
@@ -62,7 +68,14 @@ int main(int argc, char **argv) {
         perror(argv[1]);
         return 1;
     }
-    int result = yyparse();
+
+    prog = ir_program_new();              /* empty IR program               */
+    int result = yyparse();               /* parse; each line gets lowered  */
     fclose(yyin);
-    return result;
+
+    if (result == 0 && nerrors == 0)
+        ir_print(prog, stdout);           /* show the IR (LLVM text)        */
+
+    ir_program_free(prog);
+    return (result || nerrors) ? 1 : 0;
 }
