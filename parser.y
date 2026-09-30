@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include "ir.h"
 #include "lower.h"
+#include "codegen.h"                     /* ← NEW */
 
 int  yylex(void);
 void yyerror(const char *msg);
@@ -74,7 +75,7 @@ int main(int argc, char **argv) {
     fclose(yyin);
 
     if (result == 0 && nerrors == 0)
-        ir_print(prog, stdout);           /* show the IR (LLVM text)        */
+        codegen_x86(prog, stdout);        /* ← CHANGED: IR → x86-64 assembly */
 
     ir_program_free(prog);
     return (result || nerrors) ? 1 : 0;
